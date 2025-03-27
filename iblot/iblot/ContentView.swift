@@ -46,9 +46,9 @@ struct ContentView: View {
                     lines.removeAll()
                 }
                 .padding()
-                Button("Export SVG") {
-                    let svg = generateSVG(from: lines, canvasSize: canvasSize)
-                    saveSVG(svg)
+                
+                ShareLink(item: generateJavaScriptCode(from: lines, canvasSize: canvasSize)) {
+                    Text("Share JavaScript Code")
                 }
                 .padding()
             }
@@ -67,42 +67,35 @@ struct ContentView: View {
         context.stroke(path, with: .color(.black), lineWidth: 2)
     }
     
-    func generateSVG(from lines: [[CGPoint]], canvasSize: CGSize) -> String {
-        let scaleX = 250 / canvasSize.width
-        let scaleY = 250 / canvasSize.height
+    func generateJavaScriptCode(from lines: [[CGPoint]], canvasSize: CGSize) -> String {
+        let scaleX = 115 / canvasSize.width
+        let scaleY = 115 / canvasSize.height
         
-        var svg = """
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 250 250" width="250" height="250">
-        """
+        var polyline = "[\n"
         
         for line in lines {
-            guard let firstPoint = line.first else { continue }
-            svg += """
-            <path d="M \(firstPoint.x * scaleX) \(firstPoint.y * scaleY)
-            """
-            for point in line.dropFirst() {
-                svg += "L \(point.x * scaleX) \(point.y * scaleY) "
+            polyline += "  ["
+            for point in line {
+                polyline += "[\(point.x * scaleX), \(point.y * scaleY)], "
             }
-            svg += "\" stroke=\"black\" fill=\"none\" stroke-width=\"2\"/>\n"
+            polyline = String(polyline.dropLast(2)) // Remove the last comma and space
+            polyline += "],\n"
         }
         
-        svg += "</svg>"
-        return svg
-    }
-    
-    func saveSVG(_ svg: String) {
-        let panel = NSSavePanel()
-        panel.allowedContentTypes = [.svg]
-        panel.nameFieldStringValue = "drawing.svg"
-        panel.begin { result in
-            if result == .OK, let url = panel.url {
-                do {
-                    try svg.write(to: url, atomically: true, encoding: .utf8)
-                } catch {
-                    print("Failed to save SVG: \(error)")
-                }
-            }
-        }
+        polyline += "]\n"
+        
+        let jsCode = """
+        const width = 115;
+        const height = 115;
+
+        setDocDimensions(width, height);
+
+        const polyline = \(polyline);
+
+        drawLines(polyline);
+        """
+        
+        return jsCode
     }
 }
 
