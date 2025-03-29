@@ -68,15 +68,16 @@ struct ContentView: View {
     }
     
     func generateJavaScriptCode(from lines: [[CGPoint]], canvasSize: CGSize) -> String {
-        let scaleX = 115 / canvasSize.width
-        let scaleY = 115 / canvasSize.height
+        let scaleX = 125 / canvasSize.width
+        let scaleY = 125 / canvasSize.height
         
         var polyline = "[\n"
         
         for line in lines {
             polyline += "  ["
             for point in line {
-                polyline += "[\(point.x * scaleX), \(point.y * scaleY)], "
+                // Flip Y coordinate by subtracting from canvas height
+                polyline += "[\(point.x * scaleX), \(125 - (point.y * scaleY))], "
             }
             polyline = String(polyline.dropLast(2)) // Remove the last comma and space
             polyline += "],\n"
@@ -85,8 +86,8 @@ struct ContentView: View {
         polyline += "]\n"
         
         let jsCode = """
-        const width = 115;
-        const height = 115;
+        const width = 125;
+        const height = 125;
 
         setDocDimensions(width, height);
 
