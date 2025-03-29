@@ -11,6 +11,7 @@ struct ContentView: View {
     @State private var lines: [[CGPoint]] = []
     @State private var currentLine: [CGPoint] = []
     @State private var canvasSize: CGSize = CGSize(width: 250, height: 250)
+    @State private var isErasing: Bool = false
     
     var body: some View {
         VStack {
@@ -28,11 +29,24 @@ struct ContentView: View {
                 }
                 .gesture(DragGesture(minimumDistance: 0)
                     .onChanged { value in
-                        currentLine.append(value.location)
+                        let location = value.location
+                        if isErasing {
+                            // Remove lines that are close to the touch point
+                            lines = lines.map { line in
+                                line.filter { point in
+                                    let distance = sqrt(pow(point.x - location.x, 2) + pow(point.y - location.y, 2))
+                                    return distance > 20 // Eraser radius
+                                }
+                            }.filter { !$0.isEmpty }
+                        } else {
+                            currentLine.append(location)
+                        }
                     }
                     .onEnded { _ in
-                        lines.append(currentLine)
-                        currentLine = []
+                        if !isErasing {
+                            lines.append(currentLine)
+                            currentLine = []
+                        }
                     }
                 )
                 .background(Color.white)
@@ -47,8 +61,14 @@ struct ContentView: View {
                 }
                 .padding()
                 
+                Button(isErasing ? "Draw" : "Erase") {
+                    isErasing.toggle()
+                }
+                .padding()
+                .foregroundColor(isErasing ? .red : .blue)
+                
                 ShareLink(item: generateJavaScriptCode(from: lines, canvasSize: canvasSize)) {
-                    Text("Share JavaScript Code")
+                    Text("AIRDROP RAAAH")
                 }
                 .padding()
             }
