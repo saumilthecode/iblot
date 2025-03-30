@@ -12,9 +12,69 @@ struct ContentView: View {
     @State private var currentLine: [CGPoint] = []
     @State private var canvasSize: CGSize = CGSize(width: 250, height: 250)
     @State private var isErasing: Bool = false
+    @State private var showingUploadConfirmation = false
+    @State private var showingUploadSuccess = false
+    @State private var showingShareSheet = false
+    @State private var showingClearConfirmation = false
     
+    // Add function to render and upload image
+    func renderAndUploadImage(size: CGSize) {
+        let renderer = ImageRenderer(content:
+            Canvas { context, _ in
+                for line in lines {
+                    drawLine(context: context, line: line, size: size)
+                }
+            }
+            .frame(width: size.width, height: size.height)
+        )
+        
+        // Configure renderer for transparency
+        renderer.isOpaque = false
+        
+        guard let uiImage = renderer.uiImage else { return }
+        guard let pngData = uiImage.pngData() else { return }
+        
+        let url = URL(string: "https://dino.bbsshack.club/upload")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        
+        let boundary = "Boundary-\(UUID().uuidString)"
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        
+        var body = Data()
+        // Generate unique filename using timestamp and random string
+        let timestamp = Int(Date().timeIntervalSince1970)
+        let randomString = UUID().uuidString.prefix(8)
+        let filename = "drawing_\(timestamp)_\(randomString).png"
+        let fieldName = "file"
+        
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"\(fieldName)\"; filename=\"\(filename)\"\r\n".data(using: .utf8)!)
+        body.append("Content-Type: image/png\r\n\r\n".data(using: .utf8)!)
+        body.append(pngData)
+        body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
+        
+        request.httpBody = body
+
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                print("Upload error: \(error)")
+                return
+            }
+            if let httpResponse = response as? HTTPURLResponse {
+                print("Upload status: \(httpResponse.statusCode)")
+                if httpResponse.statusCode == 200 {
+                    DispatchQueue.main.async {
+                        showingUploadSuccess = true
+                    }
+                }
+            }
+        }.resume()
+    }
+
+
     var body: some View {
-        VStack {
+        VStack(spacing: 20) {
             GeometryReader { geometry in
                 Canvas { context, size in
                     DispatchQueue.main.async {
@@ -55,22 +115,58 @@ struct ContentView: View {
                 .border(Color.black, width: 1)
             }
             
+            // Drawing controls directly below canvas
             HStack {
                 Button("Clear") {
-                    lines.removeAll()
+                    showingClearConfirmation = true
                 }
                 .padding()
+                .foregroundColor(.red)
+                .alert("Confirm Clear", isPresented: $showingClearConfirmation) {
+                    Button("Cancel", role: .cancel) { }
+                    Button("Clear", role: .destructive) {
+                        lines.removeAll()
+                    }
+                } message: {
+                    Text("Are you sure you want to clear the drawing?")
+                }
                 
                 Button(isErasing ? "Draw" : "Erase") {
                     isErasing.toggle()
                 }
                 .padding()
                 .foregroundColor(isErasing ? .red : .blue)
-                
-                ShareLink(item: generateJavaScriptCode(from: lines, canvasSize: canvasSize)) {
-                    Text("AIRDROP RAAAH")
+            }
+            
+            Spacer()
+            
+            // Upload and Airdrop buttons at bottom
+            HStack {
+                Button("Upload") {
+                    showingUploadConfirmation = true
                 }
                 .padding()
+                .alert("Confirm Upload", isPresented: $showingUploadConfirmation) {
+                    Button("Cancel", role: .cancel) { }
+                    Button("Upload") {
+                        renderAndUploadImage(size: canvasSize)
+                    }
+                } message: {
+                    Text("Are you sure you want to upload this drawing?")
+                }
+                .alert("Success", isPresented: $showingUploadSuccess) {
+                    Button("OK", role: .cancel) { }
+                } message: {
+                    Text("Your drawing was successfully uploaded!")
+                }
+                
+                Button("Airdrop!") {
+                    showingShareSheet = true
+                }
+                .padding()
+                .sheet(isPresented: $showingShareSheet) {
+                    ShareSheet(activityItems: [generateJavaScriptCode(from: lines, canvasSize: canvasSize)])
+                }
             }
         }
         .padding()
@@ -118,6 +214,17 @@ struct ContentView: View {
         
         return jsCode
     }
+}
+
+struct ShareSheet: UIViewControllerRepresentable {
+    let activityItems: [Any]
+    
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        let controller = UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
+        return controller
+    }
+    
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 struct ContentView_Previews: PreviewProvider {
