@@ -8,4 +8,4 @@ how to use
 5. copy and paste file into blot editor and profit
 
 
-for use with https://github.com/saumilthecode/BBSS-Hack-Club-dinos , use the branch server-to-ipad-coms
+for use with https://github.com/saumilthecode/BBSS-Hack-Club-dinos 
