@@ -18,6 +18,7 @@ jobs:
 
       - name: Build & Run UI Tests
         run: |
+          cd iblot  # Move into the correct directory
           xcodebuild test \
           -project iblot.xcodeproj \
           -scheme iblot \
