@@ -160,7 +160,7 @@ struct ContentView: View {
                     Text("Your drawing was successfully uploaded!")
                 }
                 
-                Button("Share") {
+                Button("Airdrop!") {
                     showingShareSheet = true
                 }
                 .padding()

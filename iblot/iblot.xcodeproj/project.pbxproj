@@ -6,11 +6,27 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		D24AEA782D995C4100BB1E2E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D2B4D9042D18550F004EA6D5 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D2B4D90B2D18550F004EA6D5;
+			remoteInfo = iblot;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
+		D24AEA722D995C4100BB1E2E /* iblotUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = iblotUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D2B4D90C2D18550F004EA6D5 /* iblot.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iblot.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		D24AEA732D995C4100BB1E2E /* iblotUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = iblotUITests;
+			sourceTree = "<group>";
+		};
 		D2B4D90E2D18550F004EA6D5 /* iblot */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = iblot;
@@ -19,6 +35,13 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		D24AEA6F2D995C4100BB1E2E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D2B4D9092D18550F004EA6D5 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -33,6 +56,7 @@
 			isa = PBXGroup;
 			children = (
 				D2B4D90E2D18550F004EA6D5 /* iblot */,
+				D24AEA732D995C4100BB1E2E /* iblotUITests */,
 				D2B4D90D2D18550F004EA6D5 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +65,7 @@
 			isa = PBXGroup;
 			children = (
 				D2B4D90C2D18550F004EA6D5 /* iblot.app */,
+				D24AEA722D995C4100BB1E2E /* iblotUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,6 +73,29 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		D24AEA712D995C4100BB1E2E /* iblotUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D24AEA7C2D995C4100BB1E2E /* Build configuration list for PBXNativeTarget "iblotUITests" */;
+			buildPhases = (
+				D24AEA6E2D995C4100BB1E2E /* Sources */,
+				D24AEA6F2D995C4100BB1E2E /* Frameworks */,
+				D24AEA702D995C4100BB1E2E /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D24AEA792D995C4100BB1E2E /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				D24AEA732D995C4100BB1E2E /* iblotUITests */,
+			);
+			name = iblotUITests;
+			packageProductDependencies = (
+			);
+			productName = iblotUITests;
+			productReference = D24AEA722D995C4100BB1E2E /* iblotUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 		D2B4D90B2D18550F004EA6D5 /* iblot */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = D2B4D91B2D185511004EA6D5 /* Build configuration list for PBXNativeTarget "iblot" */;
@@ -80,6 +128,10 @@
 				LastSwiftUpdateCheck = 1620;
 				LastUpgradeCheck = 1620;
 				TargetAttributes = {
+					D24AEA712D995C4100BB1E2E = {
+						CreatedOnToolsVersion = 16.2;
+						TestTargetID = D2B4D90B2D18550F004EA6D5;
+					};
 					D2B4D90B2D18550F004EA6D5 = {
 						CreatedOnToolsVersion = 16.2;
 					};
@@ -100,11 +152,19 @@
 			projectRoot = "";
 			targets = (
 				D2B4D90B2D18550F004EA6D5 /* iblot */,
+				D24AEA712D995C4100BB1E2E /* iblotUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		D24AEA702D995C4100BB1E2E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D2B4D90A2D18550F004EA6D5 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -115,6 +175,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		D24AEA6E2D995C4100BB1E2E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		D2B4D9082D18550F004EA6D5 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -124,7 +191,54 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		D24AEA792D995C4100BB1E2E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D2B4D90B2D18550F004EA6D5 /* iblot */;
+			targetProxy = D24AEA782D995C4100BB1E2E /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		D24AEA7A2D995C4100BB1E2E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = U4679NLU6P;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = club.bbsshack.iblotUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = iblot;
+			};
+			name = Debug;
+		};
+		D24AEA7B2D995C4100BB1E2E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = U4679NLU6P;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = club.bbsshack.iblotUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = iblot;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 		D2B4D9192D185511004EA6D5 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -322,6 +436,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		D24AEA7C2D995C4100BB1E2E /* Build configuration list for PBXNativeTarget "iblotUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D24AEA7A2D995C4100BB1E2E /* Debug */,
+				D24AEA7B2D995C4100BB1E2E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		D2B4D9072D18550F004EA6D5 /* Build configuration list for PBXProject "iblot" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
