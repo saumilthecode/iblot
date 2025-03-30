@@ -19,7 +19,7 @@ jobs:
       - name: Build & Run UI Tests
         run: |
           xcodebuild test \
-          -project iblot.xcodeproj \  # ✅ Use .xcodeproj (not .xcworkspace)
+          -project iblot.xcodeproj \
           -scheme iblot \
           -destination 'platform=iOS Simulator,name=iPhone 14,OS=latest' \
           -resultBundlePath TestResults.xcresult
