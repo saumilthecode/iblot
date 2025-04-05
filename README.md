@@ -8,4 +8,4 @@ how to use
 5. copy and paste file into blot editor and profit
 
 
-for use with https://github.com/saumilthecode/BBSS-Hack-Club-dinos 
+also built for use with https://github.com/saumilthecode/BBSS-Hack-Club-dinos (drawn image gets zapped to the dinodisplay)
