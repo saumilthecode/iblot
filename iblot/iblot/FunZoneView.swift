@@ -7,7 +7,6 @@
 
 import SwiftUI
 import UIKit
-import WebKit
 
 // Add AppDelegate reference if it doesn't exist in the project
 @objcMembers class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -27,13 +26,19 @@ struct FunZoneView: View {
     @State private var effectIntensity: Double = 0.5
     @State private var showingShareSheet = false
     @State private var transformedCode: String = ""
-    @State private var previewHTML: String = ""
-    @State private var showPreview: Bool = false
+    @State private var transformedLines: [[CGPoint]] = []
+    
+    // Pan and zoom states
+    @State private var scale: CGFloat = 1.0
+    @State private var lastScale: CGFloat = 1.0
+    @State private var offset: CGSize = .zero
+    @State private var lastOffset: CGSize = .zero
+    @State private var mousePosition: CGPoint = .zero
     
     enum EffectType: String, CaseIterable, Identifiable {
         case wave = "Wave"
         case spiral = "Spiral"
-        case implode = "Implode"  // Changed from explode to implode
+        case implode = "Implode"
         case noise = "Noise"
         case jitter = "Jitter"
         
@@ -70,7 +75,10 @@ struct FunZoneView: View {
         // Apply selected effect
         """
         
-        // Add effect-specific code
+        // Transform the lines for preview
+        transformedLines = transformLinesForPreview(lines: lines, effect: effect, intensity: intensity)
+        
+        // Add effect-specific code for export
         switch effect {
         case .wave:
             jsCode += """
@@ -163,129 +171,115 @@ struct FunZoneView: View {
         return jsCode
     }
     
-    func generatePreviewHTML(jsCode: String) -> String {
-        return """
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <style>
-                body { margin: 0; overflow: hidden; display: flex; justify-content: center; align-items: center; }
-                canvas { border: 1px solid #ccc; background: white; }
-            </style>
-        </head>
-        <body>
-            <canvas id="canvas" width="250" height="250"></canvas>
-            <script>
-                const canvas = document.getElementById('canvas');
-                const ctx = canvas.getContext('2d');
-                
-                // Mock Blot toolkit functions
-                const bt = {
-                    iteratePoints: function(polylines, callback) {
-                        return polylines.map(polyline => {
-                            const newLine = [];
-                            for (let i = 0; i < polyline.length; i++) {
-                                const result = callback(polyline[i], i / (polyline.length - 1));
-                                if (result !== "BREAK" && result !== "REMOVE") {
-                                    newLine.push(result);
-                                } else if (result === "BREAK" && newLine.length > 0) {
-                                    break;
-                                }
-                            }
-                            return newLine;
-                        });
-                    },
-                    scale: function(polylines, scale, origin = [62.5, 62.5]) {
-                        return polylines.map(polyline => {
-                            return polyline.map(point => {
-                                const dx = point[0] - origin[0];
-                                const dy = point[1] - origin[1];
-                                return [
-                                    origin[0] + dx * (typeof scale === 'number' ? scale : scale[0]),
-                                    origin[1] + dy * (typeof scale === 'number' ? scale : scale[1])
-                                ];
-                            });
-                        });
-                    },
-                    translate: function(polylines, offset) {
-                        return polylines.map(polyline => {
-                            return polyline.map(point => {
-                                return [point[0] + offset[0], point[1] + offset[1]];
-                            });
-                        });
-                    },
-                    originate: function(polylines) {
-                        // Find center
-                        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-                        polylines.forEach(polyline => {
-                            polyline.forEach(point => {
-                                minX = Math.min(minX, point[0]);
-                                minY = Math.min(minY, point[1]);
-                                maxX = Math.max(maxX, point[0]);
-                                maxY = Math.max(maxY, point[1]);
-                            });
-                        });
-                        
-                        const centerX = (minX + maxX) / 2;
-                        const centerY = (minY + maxY) / 2;
-                        
-                        return bt.translate(polylines, [-centerX, -centerY]);
-                    },
-                    copy: function(polylines) {
-                        return JSON.parse(JSON.stringify(polylines));
-                    },
-                    resample: function(polylines, sampleRate) {
-                        // Simple implementation for preview
-                        return polylines;
-                    },
-                    rand: function() {
-                        return Math.random();
-                    },
-                    setRandSeed: function(seed) {
-                        // Do nothing for preview
-                    }
-                };
-                
-                function setDocDimensions(width, height) {
-                    // Scale canvas for preview
-                    canvas.width = width * 2;
-                    canvas.height = height * 2;
-                    ctx.scale(2, 2);
+    // Apply transformation to lines natively in Swift for preview
+    func transformLinesForPreview(lines: [[CGPoint]], effect: EffectType, intensity: Double) -> [[CGPoint]] {
+        guard !lines.isEmpty else { return [] }
+        
+        let center = CGPoint(x: drawingData.canvasSize.width / 2, y: drawingData.canvasSize.height / 2)
+        
+        switch effect {
+        case .wave:
+            return lines.map { line in
+                line.map { point in
+                    let waveHeight = CGFloat(intensity * 20)
+                    let frequency: CGFloat = 0.1
+                    return CGPoint(
+                        x: point.x,
+                        y: point.y + sin(point.x * frequency) * waveHeight
+                    )
                 }
-                
-                function drawLines(polylines) {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    ctx.lineWidth = 1;
-                    ctx.strokeStyle = 'black';
+            }
+            
+        case .spiral:
+            return lines.map { line in
+                line.enumerated().map { (index, point) in
+                    let t = CGFloat(index) / max(CGFloat(line.count - 1), 1)
+                    let scale = 1 + CGFloat(intensity) * 0.5
+                    let rotationFactor = CGFloat(intensity * 10)
                     
-                    polylines.forEach(polyline => {
-                        if (polyline.length > 0) {
-                            ctx.beginPath();
-                            ctx.moveTo(polyline[0][0], polyline[0][1]);
-                            for (let i = 1; i < polyline.length; i++) {
-                                ctx.lineTo(polyline[i][0], polyline[i][1]);
-                            }
-                            ctx.stroke();
-                        }
-                    });
+                    let dx = point.x - center.x
+                    let dy = point.y - center.y
+                    let angle = atan2(dy, dx) + (t * rotationFactor)
+                    let dist = sqrt(dx*dx + dy*dy) * scale
+                    
+                    return CGPoint(
+                        x: center.x + cos(angle) * dist,
+                        y: center.y + sin(angle) * dist
+                    )
                 }
-                
-                // Execute the user's code
-                \(jsCode)
-            </script>
-        </body>
-        </html>
-        """
+            }
+            
+        case .implode:
+            let implodeFactor = 1 - CGFloat(intensity) * 0.8
+            var transformedLines = lines
+            
+            // Find the bounding box
+            var minX: CGFloat = .infinity
+            var minY: CGFloat = .infinity
+            var maxX: CGFloat = -.infinity
+            var maxY: CGFloat = -.infinity
+            
+            for line in lines {
+                for point in line {
+                    minX = min(minX, point.x)
+                    minY = min(minY, point.y)
+                    maxX = max(maxX, point.x)
+                    maxY = max(maxY, point.y)
+                }
+            }
+            
+            let centerX = (minX + maxX) / 2
+            let centerY = (minY + maxY) / 2
+            
+            return transformedLines.map { line in
+                line.map { point in
+                    let dx = point.x - centerX
+                    let dy = point.y - centerY
+                    return CGPoint(
+                        x: center.x + dx * implodeFactor,
+                        y: center.y + dy * implodeFactor
+                    )
+                }
+            }
+            
+        case .noise:
+            let noiseFactor = CGFloat(intensity * 15)
+            
+            return lines.map { line in
+                line.map { point in
+                    CGPoint(
+                        x: point.x + (CGFloat.random(in: -0.5...0.5) * noiseFactor),
+                        y: point.y + (CGFloat.random(in: -0.5...0.5) * noiseFactor)
+                    )
+                }
+            }
+            
+        case .jitter:
+            let jitterAmount = CGFloat(intensity * 10)
+            
+            return lines.map { line in
+                line.map { point in
+                    if Bool.random() {
+                        return CGPoint(
+                            x: point.x + (CGFloat.random(in: -0.5...0.5) * jitterAmount),
+                            y: point.y + (CGFloat.random(in: -0.5...0.5) * jitterAmount)
+                        )
+                    }
+                    return point
+                }
+            }
+        }
     }
     
     func updatePreview() {
         if !drawingData.lines.isEmpty {
-            let jsCode = applyEffect(to: drawingData.lines, effect: selectedEffect, intensity: effectIntensity)
-            previewHTML = generatePreviewHTML(jsCode: jsCode)
-            transformedCode = jsCode
-            showPreview = true
+            transformedCode = applyEffect(to: drawingData.lines, effect: selectedEffect, intensity: effectIntensity)
         }
+    }
+    
+    func centerView() {
+        scale = 1.0
+        offset = .zero
     }
     
     var body: some View {
@@ -298,17 +292,101 @@ struct FunZoneView: View {
                 Text("Fun Zone - Transform Your Drawing")
                     .font(.headline)
                 
-                // Preview WebView
-                if showPreview {
-                    WebView(htmlString: previewHTML)
-                        .frame(height: 250)
-                        .cornerRadius(8)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                        )
-                        .padding(.horizontal)
+                // Native Preview Canvas
+                ZStack {
+                    GeometryReader { geometry in
+                        let size = min(geometry.size.width, 250)
+                        
+                        ZStack {
+                            // Canvas for drawing
+                            Canvas { context, canvasSize in
+                                // Draw document boundaries
+                                let docRect = CGRect(x: 0, y: 0, width: canvasSize.width, height: canvasSize.height)
+                                context.stroke(Path(docRect), with: .color(.blue.opacity(0.5)))
+                                
+                                // Apply transformations for pan and zoom
+                                context.translateBy(x: offset.width + canvasSize.width/2, y: offset.height + canvasSize.height/2)
+                                context.scaleBy(x: scale, y: scale)
+                                context.translateBy(x: -canvasSize.width/2, y: -canvasSize.height/2)
+                                
+                                // Draw the transformed lines
+                                for line in transformedLines {
+                                    let path = Path { path in
+                                        guard let firstPoint = line.first else { return }
+                                        
+                                        // Scale the points to fit the canvas
+                                        let scaleX = canvasSize.width / drawingData.canvasSize.width
+                                        let scaleY = canvasSize.height / drawingData.canvasSize.height
+                                        
+                                        path.move(to: CGPoint(x: firstPoint.x * scaleX, y: firstPoint.y * scaleY))
+                                        for point in line.dropFirst() {
+                                            path.addLine(to: CGPoint(x: point.x * scaleX, y: point.y * scaleY))
+                                        }
+                                    }
+                                    context.stroke(path, with: .color(.black), lineWidth: 2)
+                                }
+                            }
+                            .frame(width: size, height: size)
+                            .background(Color.white)
+                            .border(Color.gray, width: 1)
+                            .cornerRadius(8)
+                            .clipped()
+                            .gesture(
+                                MagnificationGesture()
+                                    .onChanged { value in
+                                        let delta = value / lastScale
+                                        lastScale = value
+                                        scale *= delta
+                                    }
+                                    .onEnded { _ in
+                                        lastScale = 1.0
+                                    }
+                            )
+                            .gesture(
+                                DragGesture()
+                                    .onChanged { value in
+                                        offset = CGSize(
+                                            width: lastOffset.width + value.translation.width,
+                                            height: lastOffset.height + value.translation.height
+                                        )
+                                    }
+                                    .onEnded { _ in
+                                        lastOffset = offset
+                                    }
+                            )
+                            
+                            // Mouse position display
+                            Text(String(format: "%.1f, %.1f", mousePosition.x, mousePosition.y))
+                                .font(.caption)
+                                .padding(4)
+                                .background(Color.black.opacity(0.6))
+                                .foregroundColor(.white)
+                                .cornerRadius(4)
+                                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                                .padding(8)
+                            
+                            // Center view button
+                            Button(action: centerView) {
+                                Image(systemName: "arrow.up.left.and.down.right.magnifyingglass")
+                                    .foregroundColor(.white)
+                                    .padding(8)
+                                    .background(Circle().fill(Color.blue.opacity(0.8)))
+                            }
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                            .padding(8)
+                        }
+                        .frame(width: size, height: size)
+                        .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
+                    }
+                    .frame(height: 250)
                 }
+                .gesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { value in
+                            mousePosition = value.location
+                        }
+                )
+                .padding(.horizontal)
                 
                 GroupBox {
                     VStack(alignment: .leading, spacing: 10) {
@@ -365,22 +443,6 @@ struct FunZoneView: View {
         .sheet(isPresented: $showingShareSheet) {
             ShareSheet(activityItems: [transformedCode])
         }
-    }
-}
-
-// WebView to render HTML preview
-struct WebView: UIViewRepresentable {
-    let htmlString: String
-    
-    func makeUIView(context: Context) -> WKWebView {
-        let webView = WKWebView()
-        webView.backgroundColor = .clear
-        webView.isOpaque = false
-        return webView
-    }
-    
-    func updateUIView(_ webView: WKWebView, context: Context) {
-        webView.loadHTMLString(htmlString, baseURL: nil)
     }
 }
 
