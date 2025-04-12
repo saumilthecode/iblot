@@ -156,6 +156,15 @@ struct DrawingView: View {
                     Text("Are you sure you want to clear the drawing?")
                 }
                 
+                Button("Undo") {
+                    if !drawingData.lines.isEmpty {
+                        drawingData.lines.removeLast()
+                    }
+                }
+                .padding()
+                .foregroundColor(.blue)
+                .disabled(drawingData.lines.isEmpty)
+                
                 Button(isErasing ? "Draw" : "Erase") {
                     isErasing.toggle()
                 }
