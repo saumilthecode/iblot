@@ -105,27 +105,34 @@ struct DrawingView: View {
                     
                     drawLine(context: context, line: currentLine, size: size)
                 }
-                .gesture(DragGesture(minimumDistance: 0)
-                    .onChanged { value in
-                        let location = value.location
-                        if isErasing {
-                            // Remove lines that are close to the touch point
-                            drawingData.lines = drawingData.lines.map { line in
-                                line.filter { point in
-                                    let distance = sqrt(pow(point.x - location.x, 2) + pow(point.y - location.y, 2))
-                                    return distance > 20 // Eraser radius
+                .gesture(
+                    SimultaneousGesture(
+                        DragGesture(minimumDistance: 0)
+                            .onChanged { value in
+                                let location = value.location
+                                if isErasing {
+                                    // Remove lines that are close to the touch point
+                                    drawingData.lines = drawingData.lines.map { line in
+                                        line.filter { point in
+                                            let distance = sqrt(pow(point.x - location.x, 2) + pow(point.y - location.y, 2))
+                                            return distance > 20 // Eraser radius
+                                        }
+                                    }.filter { !$0.isEmpty }
+                                } else {
+                                    currentLine.append(location)
                                 }
-                            }.filter { !$0.isEmpty }
-                        } else {
-                            currentLine.append(location)
-                        }
-                    }
-                    .onEnded { _ in
-                        if !isErasing {
-                            drawingData.lines.append(currentLine)
-                            currentLine = []
-                        }
-                    }
+                            }
+                            .onEnded { _ in
+                                if !isErasing {
+                                    drawingData.lines.append(currentLine)
+                                    currentLine = []
+                                }
+                            },
+                        TapGesture(count: 1)
+                            .onEnded { _ in
+                                // This gesture helps prevent multi-touch issues
+                            }
+                    )
                 )
                 .background(Color.white)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
