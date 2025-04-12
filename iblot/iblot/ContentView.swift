@@ -8,9 +8,27 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var lines: [[CGPoint]] = []
+    @StateObject private var drawingData = DrawingData()
+    
+    var body: some View {
+        TabView {
+            DrawingView()
+                .tabItem {
+                    Label("Draw", systemImage: "pencil")
+                }
+            
+            FunZoneView()
+                .tabItem {
+                    Label("Fun Zone", systemImage: "star")
+                }
+        }
+        .environmentObject(drawingData)
+    }
+}
+
+struct DrawingView: View {
+    @EnvironmentObject var drawingData: DrawingData
     @State private var currentLine: [CGPoint] = []
-    @State private var canvasSize: CGSize = CGSize(width: 250, height: 250)
     @State private var isErasing: Bool = false
     @State private var showingUploadConfirmation = false
     @State private var showingUploadSuccess = false
@@ -21,7 +39,7 @@ struct ContentView: View {
     func renderAndUploadImage(size: CGSize) {
         let renderer = ImageRenderer(content:
             Canvas { context, _ in
-                for line in lines {
+                for line in drawingData.lines {
                     drawLine(context: context, line: line, size: size)
                 }
             }
@@ -78,10 +96,10 @@ struct ContentView: View {
             GeometryReader { geometry in
                 Canvas { context, size in
                     DispatchQueue.main.async {
-                        canvasSize = size
+                        drawingData.canvasSize = size
                     }
                     
-                    for line in lines {
+                    for line in drawingData.lines {
                         drawLine(context: context, line: line, size: size)
                     }
                     
@@ -92,7 +110,7 @@ struct ContentView: View {
                         let location = value.location
                         if isErasing {
                             // Remove lines that are close to the touch point
-                            lines = lines.map { line in
+                            drawingData.lines = drawingData.lines.map { line in
                                 line.filter { point in
                                     let distance = sqrt(pow(point.x - location.x, 2) + pow(point.y - location.y, 2))
                                     return distance > 20 // Eraser radius
@@ -104,7 +122,7 @@ struct ContentView: View {
                     }
                     .onEnded { _ in
                         if !isErasing {
-                            lines.append(currentLine)
+                            drawingData.lines.append(currentLine)
                             currentLine = []
                         }
                     }
@@ -125,7 +143,7 @@ struct ContentView: View {
                 .alert("Confirm Clear", isPresented: $showingClearConfirmation) {
                     Button("Cancel", role: .cancel) { }
                     Button("Clear", role: .destructive) {
-                        lines.removeAll()
+                        drawingData.lines.removeAll()
                     }
                 } message: {
                     Text("Are you sure you want to clear the drawing?")
@@ -149,7 +167,7 @@ struct ContentView: View {
                 .alert("Confirm Upload", isPresented: $showingUploadConfirmation) {
                     Button("Cancel", role: .cancel) { }
                     Button("Upload") {
-                        renderAndUploadImage(size: canvasSize)
+                        renderAndUploadImage(size: drawingData.canvasSize)
                     }
                 } message: {
                     Text("Are you sure you want to upload this drawing?")
@@ -165,7 +183,7 @@ struct ContentView: View {
                 }
                 .padding()
                 .sheet(isPresented: $showingShareSheet) {
-                    ShareSheet(activityItems: [generateJavaScriptCode(from: lines, canvasSize: canvasSize)])
+                    ShareSheet(activityItems: [generateJavaScriptCode(from: drawingData.lines, canvasSize: drawingData.canvasSize)])
                 }
             }
         }
