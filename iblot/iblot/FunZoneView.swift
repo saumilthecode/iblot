@@ -388,7 +388,7 @@ struct FunZoneView: View {
                             }
                         }
                         .pickerStyle(SegmentedPickerStyle())
-                        .onChange(of: selectedEffect) { _ in
+                        .onChange(of: selectedEffect) { oldValue, newValue in
                             updatePreview()
                         }
                         
@@ -397,7 +397,7 @@ struct FunZoneView: View {
                         
                         Slider(value: $effectIntensity, in: 0.1...1.0, step: 0.1)
                             .padding(.bottom)
-                            .onChange(of: effectIntensity) { _ in
+                            .onChange(of: effectIntensity) { oldValue, newValue in
                                 updatePreview()
                             }
                         
