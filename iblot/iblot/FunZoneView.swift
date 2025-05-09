@@ -8,13 +8,11 @@
 import SwiftUI
 import UIKit
 
-// Add AppDelegate reference if it doesn't exist in the project
 @objcMembers class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
     var rootViewController: UINavigationController?
 }
 
-// Add a class to share drawing data between views
 class DrawingData: ObservableObject {
     @Published var lines: [[CGPoint]] = []
     @Published var canvasSize: CGSize = CGSize(width: 250, height: 250)
@@ -28,7 +26,6 @@ struct FunZoneView: View {
     @State private var transformedCode: String = ""
     @State private var transformedLines: [[CGPoint]] = []
     
-    // Pan and zoom states
     @State private var scale: CGFloat = 1.0
     @State private var lastScale: CGFloat = 1.0
     @State private var offset: CGSize = .zero
@@ -38,7 +35,7 @@ struct FunZoneView: View {
     enum EffectType: String, CaseIterable, Identifiable {
         case wave = "Wave"
         case spiral = "Spiral"
-        case implode = "Implode"
+        case kaleidoscope = "Kaleidoscope"
         case noise = "Noise"
         case jitter = "Jitter"
         
@@ -71,14 +68,10 @@ struct FunZoneView: View {
         setDocDimensions(width, height);
 
         const polyline = \(polyline);
-        
-        // Apply selected effect
         """
         
-        // Transform the lines for preview
         transformedLines = transformLinesForPreview(lines: lines, effect: effect, intensity: intensity)
         
-        // Add effect-specific code for export
         switch effect {
         case .wave:
             jsCode += """
@@ -113,16 +106,32 @@ struct FunZoneView: View {
             
             drawLines(transformedPolyline);
             """
-        case .implode:
+        case .kaleidoscope:
             jsCode += """
             
             const center = [width/2, height/2];
-            const implodeFactor = 1 - \(intensity) * 0.8;
+            const segments = Math.floor(\(intensity * 8) + 2); // 2-10 segments based on intensity
+            const transformedPolyline = [];
             
-            const transformedPolyline = bt.copy(polyline);
-            bt.originate(transformedPolyline);
-            bt.scale(transformedPolyline, implodeFactor);
-            bt.translate(transformedPolyline, center);
+            // Create rotated copies
+            for (let i = 0; i < segments; i++) {
+                const angle = (i * 2 * Math.PI) / segments;
+                const rotated = bt.copy(polyline);
+                
+                bt.iteratePoints(rotated, (pt) => {
+                    const [x, y] = pt;
+                    const dx = x - center[0];
+                    const dy = y - center[1];
+                    const cos = Math.cos(angle);
+                    const sin = Math.sin(angle);
+                    return [
+                        center[0] + dx * cos - dy * sin,
+                        center[1] + dx * sin + dy * cos
+                    ];
+                });
+                
+                transformedPolyline.push(...rotated);
+            }
             
             drawLines(transformedPolyline);
             """
@@ -148,11 +157,9 @@ struct FunZoneView: View {
             const jitterAmount = \(intensity * 10);
             bt.setRandSeed(Date.now());
             
-            // Resample to add more points
             const transformedPolyline = bt.copy(polyline);
             bt.resample(transformedPolyline, 2);
             
-            // Apply jitter to each point
             bt.iteratePoints(transformedPolyline, (pt) => {
                 const [x, y] = pt;
                 if (bt.rand() > 0.5) {
@@ -171,7 +178,6 @@ struct FunZoneView: View {
         return jsCode
     }
     
-    // Apply transformation to lines natively in Swift for preview
     func transformLinesForPreview(lines: [[CGPoint]], effect: EffectType, intensity: Double) -> [[CGPoint]] {
         guard !lines.isEmpty else { return [] }
         
@@ -209,38 +215,29 @@ struct FunZoneView: View {
                 }
             }
             
-        case .implode:
-            let implodeFactor = 1 - CGFloat(intensity) * 0.8
-            var transformedLines = lines
+        case .kaleidoscope:
+            let segments = Int(intensity * 8) + 2 // 2-10 segments based on intensity
+            var transformedLines: [[CGPoint]] = []
             
-            // Find the bounding box
-            var minX: CGFloat = .infinity
-            var minY: CGFloat = .infinity
-            var maxX: CGFloat = -.infinity
-            var maxY: CGFloat = -.infinity
-            
-            for line in lines {
-                for point in line {
-                    minX = min(minX, point.x)
-                    minY = min(minY, point.y)
-                    maxX = max(maxX, point.x)
-                    maxY = max(maxY, point.y)
+            // Create rotated copies
+            for i in 0..<segments {
+                let angle = CGFloat(i) * 2 * .pi / CGFloat(segments)
+                let rotatedLines = lines.map { line in
+                    line.map { point in
+                        let dx = point.x - center.x
+                        let dy = point.y - center.y
+                        let cos = cos(angle)
+                        let sin = sin(angle)
+                        return CGPoint(
+                            x: center.x + dx * cos - dy * sin,
+                            y: center.y + dx * sin + dy * cos
+                        )
+                    }
                 }
+                transformedLines.append(contentsOf: rotatedLines)
             }
             
-            let centerX = (minX + maxX) / 2
-            let centerY = (minY + maxY) / 2
-            
-            return transformedLines.map { line in
-                line.map { point in
-                    let dx = point.x - centerX
-                    let dy = point.y - centerY
-                    return CGPoint(
-                        x: center.x + dx * implodeFactor,
-                        y: center.y + dy * implodeFactor
-                    )
-                }
-            }
+            return transformedLines
             
         case .noise:
             let noiseFactor = CGFloat(intensity * 15)
@@ -292,29 +289,23 @@ struct FunZoneView: View {
                 Text("Fun Zone - Transform Your Drawing")
                     .font(.headline)
                 
-                // Native Preview Canvas
                 ZStack {
                     GeometryReader { geometry in
                         let size = min(geometry.size.width, 250)
                         
                         ZStack {
-                            // Canvas for drawing
                             Canvas { context, canvasSize in
-                                // Draw document boundaries
                                 let docRect = CGRect(x: 0, y: 0, width: canvasSize.width, height: canvasSize.height)
                                 context.stroke(Path(docRect), with: .color(.blue.opacity(0.5)))
                                 
-                                // Apply transformations for pan and zoom
                                 context.translateBy(x: offset.width + canvasSize.width/2, y: offset.height + canvasSize.height/2)
                                 context.scaleBy(x: scale, y: scale)
                                 context.translateBy(x: -canvasSize.width/2, y: -canvasSize.height/2)
                                 
-                                // Draw the transformed lines
                                 for line in transformedLines {
                                     let path = Path { path in
                                         guard let firstPoint = line.first else { return }
                                         
-                                        // Scale the points to fit the canvas
                                         let scaleX = canvasSize.width / drawingData.canvasSize.width
                                         let scaleY = canvasSize.height / drawingData.canvasSize.height
                                         
@@ -355,7 +346,6 @@ struct FunZoneView: View {
                                     }
                             )
                             
-                            // Mouse position display
                             Text(String(format: "%.1f, %.1f", mousePosition.x, mousePosition.y))
                                 .font(.caption)
                                 .padding(4)
@@ -365,7 +355,6 @@ struct FunZoneView: View {
                                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                                 .padding(8)
                             
-                            // Center view button
                             Button(action: centerView) {
                                 Image(systemName: "arrow.up.left.and.down.right.magnifyingglass")
                                     .foregroundColor(.white)
@@ -451,4 +440,4 @@ struct FunZoneView_Previews: PreviewProvider {
         FunZoneView()
             .environmentObject(DrawingData())
     }
-} 
+}
