@@ -52,42 +52,43 @@ struct DrawingView: View {
         guard let uiImage = renderer.uiImage else { return }
         guard let pngData = uiImage.pngData() else { return }
         
-        let url = URL(string: "https://dino.bbsshack.club/upload")!
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
+        // Commenting out the upload to server part
+        // let url = URL(string: "https://dino.bbsshack.club/upload")!
+        // var request = URLRequest(url: url)
+        // request.httpMethod = "POST"
         
-        let boundary = "Boundary-\(UUID().uuidString)"
-        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        // let boundary = "Boundary-\(UUID().uuidString)"
+        // request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
         
-        var body = Data()
-        // Generate unique filename using timestamp and random string
-        let timestamp = Int(Date().timeIntervalSince1970)
-        let randomString = UUID().uuidString.prefix(8)
-        let filename = "drawing_\(timestamp)_\(randomString).png"
-        let fieldName = "file"
+        // var body = Data()
+        // // Generate unique filename using timestamp and random string
+        // let timestamp = Int(Date().timeIntervalSince1970)
+        // let randomString = UUID().uuidString.prefix(8)
+        // let filename = "drawing_\(timestamp)_\(randomString).png"
+        // let fieldName = "file"
         
-        body.append("--\(boundary)\r\n".data(using: .utf8)!)
-        body.append("Content-Disposition: form-data; name=\"\(fieldName)\"; filename=\"\(filename)\"\r\n".data(using: .utf8)!)
-        body.append("Content-Type: image/png\r\n\r\n".data(using: .utf8)!)
-        body.append(pngData)
-        body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
+        // body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        // body.append("Content-Disposition: form-data; name=\"\(fieldName)\"; filename=\"\(filename)\"\r\n".data(using: .utf8)!)
+        // body.append("Content-Type: image/png\r\n\r\n".data(using: .utf8)!)
+        // body.append(pngData)
+        // body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
         
-        request.httpBody = body
+        // request.httpBody = body
 
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            if let error = error {
-                print("Upload error: \(error)")
-                return
-            }
-            if let httpResponse = response as? HTTPURLResponse {
-                print("Upload status: \(httpResponse.statusCode)")
-                if httpResponse.statusCode == 200 {
-                    DispatchQueue.main.async {
-                        showingUploadSuccess = true
-                    }
-                }
-            }
-        }.resume()
+        // URLSession.shared.dataTask(with: request) { data, response, error in
+        //     if let error = error {
+        //         print("Upload error: \(error)")
+        //         return
+        //     }
+        //     if let httpResponse = response as? HTTPURLResponse {
+        //         print("Upload status: \(httpResponse.statusCode)")
+        //         if httpResponse.statusCode == 200 {
+        //             DispatchQueue.main.async {
+        //                 showingUploadSuccess = true
+        //             }
+        //         }
+        //     }
+        // }.resume()
     }
 
 
@@ -176,23 +177,23 @@ struct DrawingView: View {
             
             // Upload and Airdrop buttons at bottom
             HStack {
-                Button("Upload") {
-                    showingUploadConfirmation = true
-                }
-                .padding()
-                .alert("Confirm Upload", isPresented: $showingUploadConfirmation) {
-                    Button("Cancel", role: .cancel) { }
-                    Button("Upload") {
-                        renderAndUploadImage(size: drawingData.canvasSize)
-                    }
-                } message: {
-                    Text("Are you sure you want to upload this drawing?")
-                }
-                .alert("Success", isPresented: $showingUploadSuccess) {
-                    Button("OK", role: .cancel) { }
-                } message: {
-                    Text("Your drawing was successfully uploaded!")
-                }
+                // Button("Upload") {
+                //     showingUploadConfirmation = true
+                // }
+                // .padding()
+                // .alert("Confirm Upload", isPresented: $showingUploadConfirmation) {
+                //     Button("Cancel", role: .cancel) { }
+                //     Button("Upload") {
+                //         renderAndUploadImage(size: drawingData.canvasSize)
+                //     }
+                // } message: {
+                //     Text("Are you sure you want to upload this drawing?")
+                // }
+                // .alert("Success", isPresented: $showingUploadSuccess) {
+                //     Button("OK", role: .cancel) { }
+                // } message: {
+                //     Text("Your drawing was successfully uploaded!")
+                // }
                 
                 Button("Airdrop!") {
                     showingShareSheet = true
