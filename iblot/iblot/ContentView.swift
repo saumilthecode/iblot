@@ -227,8 +227,10 @@ struct DrawingView: View {
         for line in lines {
             polyline += "  ["
             for point in line {
-                // Flip Y coordinate by subtracting from canvas height
-                polyline += "[\(point.x * scaleX), \(125 - (point.y * scaleY))], "
+                // Scale and constrain points to stay within 0-125 range
+                let x = min(max(point.x * scaleX, 0), 125)
+                let y = min(max(125 - (point.y * scaleY), 0), 125)
+                polyline += "[\(x), \(y)], "
             }
             polyline = String(polyline.dropLast(2)) // Remove the last comma and space
             polyline += "],\n"
