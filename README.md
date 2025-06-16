@@ -1,4 +1,4 @@
-![](https://waka.hackclub.com/api/badge/U078K08NN2Y/interval:any/project:iblot) (i expected it to take longer tbh)
+[![](https://waka.hackclub.com/api/badge/U078K08NN2Y/interval:any/project:iblot)](https://hackatime-badge.hackclub.com/U078K08NN2Y/iblot) (i expected it to take longer tbh)
 
 
 how to use
