@@ -13,3 +13,6 @@ also built for use with https://github.com/saumilthecode/BBSS-Hack-Club-dinos (d
 
 # proof that it works
 ![](https://github.com/saumilthecode/iblot/blob/main/IMG_2231.png?raw=true)
+
+
+fair warning that some bits of this project were made with cursor that helped implement the JS bits cuz i dont understand polylines <3
